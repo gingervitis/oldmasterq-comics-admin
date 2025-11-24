@@ -1,6 +1,6 @@
 # Old Master Q Comics Admin
 
-I would like to create an admin interface which will replace a system is currently manually managed with thousands of Markdown files.
+I would like to create an nice and clean admin interface which will replace a system is currently manually managed with thousands of Markdown files.
 
 ## Purpose
 

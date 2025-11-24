@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Source Comic Strip Image
+model SourceStrip {
+  id                  String   @id // e.g. "A0247" - not editable
+  date                DateTime @default(now()) @updatedAt // last edited date
+  yearRange           String   // "1962 - 1967", "1968 - 1972", "1973 - 1982", "1983 - 1989"
+  titleChinese        String   // Chinese title of primary strip
+  format              Int      // panel count: 4, 6, 8, or 12
+  topImageFileBase    String   // source image file for admin display
+  bottomImageFileBase String?  // bottom half image (optional)
+  titleEnglish        String?  // English title (optional)
+  altText             String?  // accessible text description (optional)
+  translation         String?  // translation notes (optional)
+  rating              Int?     // quality/priority rating: null/0, 1, 2, or 3
+
+  // Relations
+  publishedStrips     PublishedStrip[]
+  tags                SourceStripTag[] // many-to-many through junction table
+
+  @@index([yearRange])
+  @@index([format])
+  @@index([rating])
+}
+
+// Tag model for consistent tag management
+model Tag {
+  id          String         @id @default(cuid())
+  name        String         @unique // tag name (e.g., "hanging", "rope")
+  createdAt   DateTime       @default(now())
+
+  // Relations
+  sourceStrips SourceStripTag[] // many-to-many through junction table
+
+  @@index([name])
+}
+
+// Junction table for many-to-many relationship between SourceStrip and Tag
+model SourceStripTag {
+  sourceStripId String
+  tagId         String
+  assignedAt    DateTime @default(now())
+
+  // Relations
+  sourceStrip   SourceStrip @relation(fields: [sourceStripId], references: [id], onDelete: Cascade)
+  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([sourceStripId, tagId])
+  @@index([sourceStripId])
+  @@index([tagId])
+}
+
+// Published Comic Strip (on website)
+model PublishedStrip {
+  id               Int      @id @default(autoincrement()) // auto-incrementing website strip ID
+  baseFile         String   // reference to source image ID
+  fileRoot         String   // website image filename
+  fileExtension    String   // file extension (.jpg, .png, etc.)
+  is450            Boolean  @default(false) // 450px width
+  isRTL            Boolean  @default(false) // RTL content direction
+  hasBuiltInTitle  Boolean  @default(false) // embedded title in image
+  shopId           String?  // related product ID (optional)
+  description      String?  // optional description text
+  layout           String   @default("layouts/comics.njk") // template to use
+  publishedAt      DateTime @default(now()) // when published
+
+  // Relation to source strip
+  sourceStrip      SourceStrip @relation(fields: [baseFile], references: [id])
+
+  @@index([baseFile])
+  @@index([publishedAt])
+}

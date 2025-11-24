@@ -11,33 +11,62 @@ This admin system manages:
 
 ## Tech Stack
 
-- Next.js (App Router)
+- Next.js 15 (App Router)
 - TypeScript
-- Vercel Postgres (database)
+- React 19
+- Prisma ORM
+- Vercel Postgres (Neon database)
 - Deployed on Vercel
 
 ## Documentation
 
-See `/docs/initial-prompt.md` for the complete system requirements and design.
+- `/docs/initial-prompt.md` - Complete system requirements and design
+- `/docs/implementation-plan.md` - Development roadmap
 
 ## Local Development
 
 ```bash
+# Install dependencies
 npm install
+
+# Set up environment variables (copy .env.example to .env)
+cp .env.example .env
+
+# Generate Prisma client
+npm run db:generate
+
+# Start development server
 npm run dev
 ```
 
 Visit `http://localhost:3000`
 
+### Database Commands
+
+```bash
+# Generate Prisma client (after schema changes)
+npm run db:generate
+
+# Push schema changes to database (no migration files)
+npm run db:push
+
+# Create and run migrations
+npm run db:migrate
+
+# Open Prisma Studio (GUI for database)
+npm run db:studio
+```
+
 ## Environment Variables
 
-Create a `.env.local` file:
+Create a `.env` file (or `.env.local` for Next.js):
 
 ```
-POSTGRES_URL=
-POSTGRES_PRISMA_URL=
-POSTGRES_URL_NON_POOLING=
+# Database connection string
+DATABASE_URL="postgresql://user:password@host:5432/dbname?schema=public"
 ```
+
+For Vercel deployment, these are automatically provided when you connect Vercel Postgres.
 
 ## Deployment
 
