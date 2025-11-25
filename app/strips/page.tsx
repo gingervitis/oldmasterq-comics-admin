@@ -1,8 +1,8 @@
+import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { StripFilters } from './StripFilters'
 import { StripTable } from './StripTable'
-import { Button } from '@/components/ui/button'
 
 interface SearchParams {
   page?: string
@@ -75,7 +75,7 @@ export default async function StripsPage({
   const totalPages = Math.ceil(total / limit)
 
   return (
-    <div className="container mx-auto py-8 max-w-7xl">
+    <div className="container mx-auto p-8 max-w-7xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Source Strips</h1>
         <p className="text-muted-foreground mt-2">

@@ -1,6 +1,6 @@
-import type { Metadata } from 'next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ThemeToggle } from '@/components/theme-toggle'
+import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({
         >
           <div className="relative min-h-screen">
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
+              <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-8">
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-semibold">Old Master Q Comics Admin</h1>
                 </div>
