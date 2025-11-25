@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { getStripImageUrl } from '@/lib/constants'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -89,7 +90,7 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
   })
 
   // Construct image URL
-  const imageUrl = `https://oldmasterq.s3.us-west-2.amazonaws.com/admin/strips/${strip.id}.png`
+  const imageUrl = getStripImageUrl(strip.topImageFileBase)
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true)
@@ -132,15 +133,12 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-[600px_1fr] gap-4">
       {/* Image Preview */}
       <div className="lg:sticky lg:top-8 lg:self-start">
         <Card>
-          <CardHeader>
-            <CardTitle>Preview</CardTitle>
-          </CardHeader>
           <CardContent>
-            <div className="relative w-full aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+            <div className="relative w-full bg-muted  overflow-hidden">
               <img
                 src={imageUrl}
                 alt={strip.titleChinese}
@@ -151,12 +149,6 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
                 }}
               />
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
-              <span className="font-medium">ID:</span> {strip.id}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Format:</span> {strip.format} panels
-            </p>
           </CardContent>
         </Card>
       </div>
