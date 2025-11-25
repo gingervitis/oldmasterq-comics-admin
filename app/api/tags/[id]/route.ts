@@ -4,9 +4,10 @@ import { prisma } from '@/lib/prisma'
 // PATCH rename tag
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { name } = body
 
@@ -22,7 +23,7 @@ export async function PATCH(
       where: { name: name.trim().toLowerCase() },
     })
 
-    if (existingTag && existingTag.id !== params.id) {
+    if (existingTag && existingTag.id !== id) {
       return NextResponse.json(
         { error: 'Tag name already exists' },
         { status: 409 }
@@ -30,7 +31,7 @@ export async function PATCH(
     }
 
     const tag = await prisma.tag.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: name.trim().toLowerCase(),
       },
@@ -49,12 +50,13 @@ export async function PATCH(
 // DELETE tag
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     // Check if tag is in use
     const tagWithUsage = await prisma.tag.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -78,7 +80,7 @@ export async function DELETE(
     }
 
     await prisma.tag.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ message: 'Tag deleted successfully' })

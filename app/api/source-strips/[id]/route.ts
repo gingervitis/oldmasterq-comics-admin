@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma'
 // GET single source strip by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const strip = await prisma.sourceStrip.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         tags: {
           include: {
@@ -48,9 +49,10 @@ export async function GET(
 // PATCH update source strip
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const {
       titleChinese,
@@ -69,7 +71,7 @@ export async function PATCH(
     const updatedStrip = await prisma.$transaction(async (tx) => {
       // Update the strip
       const strip = await tx.sourceStrip.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           titleChinese,
           titleEnglish,
@@ -115,7 +117,97 @@ export async function PATCH(
 
       // Fetch and return updated strip with tags
       return tx.sourceStrip.findUnique({
-        where: { id: params.id },
+        where: { id },
+        include: {
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+          publishedStrips: true,
+        },
+      })
+    })
+
+    // Format response
+    const formattedStrip = {
+      ...updatedStrip,
+      tags: updatedStrip!.tags.map((t) => ({
+        id: t.tag.id,
+        name: t.tag.name,
+      })),
+    }
+
+    return NextResponse.json(formattedStrip)
+  } catch (error) {
+    console.error('Error updating source strip:', error)
+    return NextResponse.json(
+      { error: 'Failed to update source strip' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT update source strip (with tag IDs)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const {
+      titleChinese,
+      titleEnglish,
+      format,
+      yearRange,
+      topImageFileBase,
+      bottomImageFileBase,
+      altText,
+      translation,
+      rating,
+      tagIds, // Array of tag IDs
+    } = body
+
+    // Start a transaction to update strip and tags
+    const updatedStrip = await prisma.$transaction(async (tx) => {
+      // Update the strip
+      const strip = await tx.sourceStrip.update({
+        where: { id },
+        data: {
+          titleChinese,
+          titleEnglish,
+          format,
+          yearRange,
+          topImageFileBase,
+          bottomImageFileBase,
+          altText,
+          translation,
+          rating: rating === null ? null : parseInt(rating),
+        },
+      })
+
+      // Handle tags if provided
+      if (tagIds !== undefined) {
+        // Remove all existing tag relationships
+        await tx.sourceStripTag.deleteMany({
+          where: { sourceStripId: id },
+        })
+
+        // Add new tag relationships
+        if (tagIds.length > 0) {
+          await tx.sourceStripTag.createMany({
+            data: tagIds.map((tagId: string) => ({
+              sourceStripId: id,
+              tagId,
+            })),
+          })
+        }
+      }
+
+      // Fetch and return updated strip with tags
+      return tx.sourceStrip.findUnique({
+        where: { id },
         include: {
           tags: {
             include: {
