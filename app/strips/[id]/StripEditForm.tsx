@@ -6,20 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { StripImagePreview } from './StripImagePreview'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
+import { StripImagePreview } from './StripImagePreview'
 
 const formSchema = z.object({
   titleChinese: z.string().min(1, 'Chinese title is required'),
@@ -140,10 +139,34 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
       {/* Form */}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rating</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      value={field.value === null ? '' : field.value}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === '' ? null : Number(e.target.value)
+                        )
+                      }
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      <option value="">Not rated</option>
+                      <option value="1">★ (1)</option>
+                      <option value="2">★★ (2)</option>
+                      <option value="3">★★★ (3)</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-4">
             <FormField
               control={form.control}
@@ -172,126 +195,9 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rating</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      value={field.value === null ? '' : field.value}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === '' ? null : Number(e.target.value)
-                        )
-                      }
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    >
-                      <option value="">Not rated</option>
-                      <option value="1">★ (1)</option>
-                      <option value="2">★★ (2)</option>
-                      <option value="3">★★★ (3)</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Images</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="topImageFileBase"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Top Image File</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Source image filename for the main strip
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="bottomImageFileBase"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bottom Image File (Optional)</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Additional bottom image for multi-part strips
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Content</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="altText"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Alt Text (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      rows={3}
-                      placeholder="Accessible description of the strip..."
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Text description for accessibility
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="translation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Translation Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      rows={4}
-                      placeholder="Translation notes and context..."
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Notes about translation or cultural context
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
@@ -317,6 +223,46 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
             )}
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="altText"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Alt Text (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      rows={3}
+                      placeholder="Accessible description of the strip..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="translation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Translation Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      rows={4}
+                      placeholder="Translation notes and context..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
 
         <Card>
           <CardHeader>
