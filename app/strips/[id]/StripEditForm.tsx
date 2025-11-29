@@ -22,10 +22,8 @@ import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
 const formSchema = z.object({
-  yearRange: z.string().min(1, 'Year range is required'),
   titleChinese: z.string().min(1, 'Chinese title is required'),
   titleEnglish: z.string().optional(),
-  format: z.coerce.number().int().min(4).max(12),
   rating: z.coerce.number().int().min(0).max(3).nullable(),
   altText: z.string().optional(),
   translation: z.string().optional(),
@@ -77,10 +75,8 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      yearRange: strip.yearRange,
       titleChinese: strip.titleChinese,
       titleEnglish: strip.titleEnglish || '',
-      format: strip.format,
       rating: strip.rating,
       altText: strip.altText || '',
       translation: strip.translation || '',
@@ -189,79 +185,33 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="yearRange"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Year Range</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      >
-                        <option value="1962 - 1967">1962 - 1967</option>
-                        <option value="1968 - 1972">1968 - 1972</option>
-                        <option value="1973 - 1982">1973 - 1982</option>
-                        <option value="1983 - 1989">1983 - 1989</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="format"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Format</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      >
-                        <option value="4">4 panels</option>
-                        <option value="6">6 panels</option>
-                        <option value="8">8 panels</option>
-                        <option value="12">12 panels</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rating</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        value={field.value === null ? '' : field.value}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === '' ? null : Number(e.target.value)
-                          )
-                        }
-                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                      >
-                        <option value="">Not rated</option>
-                        <option value="1">★ (1)</option>
-                        <option value="2">★★ (2)</option>
-                        <option value="3">★★★ (3)</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rating</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      value={field.value === null ? '' : field.value}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === '' ? null : Number(e.target.value)
+                        )
+                      }
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      <option value="">Not rated</option>
+                      <option value="1">★ (1)</option>
+                      <option value="2">★★ (2)</option>
+                      <option value="3">★★★ (3)</option>
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 

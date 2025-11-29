@@ -48,6 +48,8 @@ export default async function StripEditPage({ params }: PageProps) {
         </Button>
       </div>
 
+      <p className="text-muted-foreground mb-6">{strip.yearRange} · {strip.format} panels</p>
+
       <StripEditForm strip={strip} allTags={allTags} />
     </div>
   )
