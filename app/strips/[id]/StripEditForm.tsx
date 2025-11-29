@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { getStripImageUrl } from '@/lib/constants'
+import { StripImagePreview } from './StripImagePreview'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -85,9 +85,6 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
     },
   })
 
-  // Construct image URL
-  const imageUrl = getStripImageUrl(strip.topImageFileBase)
-
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true)
     try {
@@ -132,21 +129,12 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
     <div className="grid grid-cols-1 lg:grid-cols-[600px_1fr] gap-4">
       {/* Image Preview */}
       <div className="lg:sticky lg:top-8 lg:self-start">
-        <Card>
-          <CardContent>
-            <div className="relative w-full bg-muted  overflow-hidden">
-              <img
-                src={imageUrl}
-                alt={strip.titleChinese}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="533" viewBox="0 0 400 533"%3E%3Crect width="400" height="533" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%239ca3af"%3EImage not found%3C/text%3E%3C/svg%3E'
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <StripImagePreview
+          format={strip.format}
+          topImageFileBase={strip.topImageFileBase}
+          bottomImageFileBase={strip.bottomImageFileBase}
+          alt={strip.titleChinese}
+        />
       </div>
 
       {/* Form */}
