@@ -44,8 +44,25 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
+  const formContext = useFormContext()
 
+  if (!formContext) {
+    // Return a safe default during hot reload edge cases
+    return {
+      id: '',
+      name: fieldContext?.name || '',
+      formItemId: '',
+      formDescriptionId: '',
+      formMessageId: '',
+      invalid: false,
+      isDirty: false,
+      isTouched: false,
+      isValidating: false,
+      error: undefined,
+    }
+  }
+
+  const { getFieldState, formState } = formContext
   const fieldState = getFieldState(fieldContext.name, formState)
 
   if (!fieldContext) {

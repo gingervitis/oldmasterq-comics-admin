@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TagInput, Tag } from '@/components/TagInput'
 import {
   Form,
   FormControl,
@@ -23,7 +24,7 @@ import { StripImagePreview } from './StripImagePreview'
 const formSchema = z.object({
   titleChinese: z.string().min(1, 'Chinese title is required'),
   titleEnglish: z.string().optional(),
-  rating: z.coerce.number().int().min(0).max(3).nullable(),
+  rating: z.union([z.null(), z.number().int().min(0).max(3)]),
   altText: z.string().optional(),
   translation: z.string().optional(),
   topImageFileBase: z.string().min(1, 'Top image file is required'),
@@ -54,11 +55,6 @@ interface Strip {
   }>
 }
 
-interface Tag {
-  id: string
-  name: string
-}
-
 interface StripEditFormProps {
   strip: Strip
   allTags: Tag[]
@@ -67,12 +63,36 @@ interface StripEditFormProps {
 export function StripEditForm({ strip, allTags }: StripEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    strip.tags.map((t) => t.tag.id)
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(
+    strip.tags.map((t) => t.tag)
   )
+  const [isSavingTags, setIsSavingTags] = useState(false)
+
+  // Auto-save tags when they change
+  const handleTagsChange = async (newTags: Tag[]) => {
+    setSelectedTags(newTags)
+    setIsSavingTags(true)
+    try {
+      const response = await fetch(`/api/source-strips/${strip.id}/tags`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tagIds: newTags.map((t) => t.id),
+        }),
+      })
+      if (!response.ok) {
+        throw new Error('Failed to save tags')
+      }
+    } catch (error) {
+      console.error('Error saving tags:', error)
+    } finally {
+      setIsSavingTags(false)
+    }
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
     defaultValues: {
       titleChinese: strip.titleChinese,
       titleEnglish: strip.titleEnglish || '',
@@ -86,6 +106,8 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true)
+    const tagIds = selectedTags.map((t) => t.id)
+    console.log('Submitting form with tagIds:', tagIds)
     try {
       const response = await fetch(`/api/source-strips/${strip.id}`, {
         method: 'PUT',
@@ -98,7 +120,7 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
           altText: values.altText || null,
           translation: values.translation || null,
           bottomImageFileBase: values.bottomImageFileBase || null,
-          tagIds: selectedTags,
+          tagIds: selectedTags.map((t) => t.id),
         }),
       })
 
@@ -116,12 +138,26 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
     }
   }
 
-  const toggleTag = (tagId: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tagId)
-        ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
-    )
+  const createTag = async (name: string): Promise<Tag> => {
+    const response = await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+
+    // If tag already exists (409), find it in allTags
+    if (response.status === 409) {
+      const existing = allTags.find(
+        (t) => t.name.toLowerCase() === name.toLowerCase()
+      )
+      if (existing) return existing
+      throw new Error('Tag exists but not found')
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to create tag')
+    }
+    return response.json()
   }
 
   return (
@@ -138,34 +174,35 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
 
       {/* Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rating</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      value={field.value === null ? '' : field.value}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === '' ? null : Number(e.target.value)
-                        )
-                      }
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    >
-                      <option value="">Not rated</option>
-                      <option value="1">★ (1)</option>
-                      <option value="2">★★ (2)</option>
-                      <option value="3">★★★ (3)</option>
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.log('Form validation errors:', errors))} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="rating"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rating</FormLabel>
+                <FormControl>
+                  <select
+                    {...field}
+                    value={field.value === null ? '' : field.value}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">Not rated</option>
+                    <option value="1">★ (1)</option>
+                    <option value="2">★★ (2)</option>
+                    <option value="3">★★★ (3)</option>
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Card>
           <CardContent className="space-y-4">
             <FormField
@@ -201,26 +238,19 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Tags</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Tags
+              {isSavingTags && <span className="text-sm text-muted-foreground font-normal">Saving...</span>}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {allTags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  variant={selectedTags.includes(tag.id) ? 'default' : 'outline'}
-                  className="cursor-pointer"
-                  onClick={() => toggleTag(tag.id)}
-                >
-                  {tag.name}
-                </Badge>
-              ))}
-            </div>
-            {allTags.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No tags available. Create tags first.
-              </p>
-            )}
+            <TagInput
+              availableTags={allTags}
+              selectedTags={selectedTags}
+              onTagsChange={handleTagsChange}
+              onCreateTag={createTag}
+              placeholder="Search or create tags..."
+            />
           </CardContent>
         </Card>
         <Card>
@@ -299,7 +329,11 @@ export function StripEditForm({ strip, allTags }: StripEditFormProps) {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            onClick={() => console.log('Submit button clicked, form values:', form.getValues(), 'form errors:', form.formState.errors)}
+          >
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

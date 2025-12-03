@@ -156,6 +156,7 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
+    console.log('PUT /api/source-strips/[id] called with:', { id, tagIds: body.tagIds })
     const {
       titleChinese,
       titleEnglish,
